@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja" class="baseline-app">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <title>PDF Explorer</title>
+  <link rel="stylesheet" href="shared/minimal-ui.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="toolbar app-titlebar hidden" id="toolbar">
+    <div id="drop-zone" class="drop-zone drop-zone-compact" tabindex="0" role="button" aria-label="別の PDF を開く">
+      <svg class="drop-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="drop-label">Open PDF…</span>
+    </div>
+
+    <div id="doc-info" class="doc-info hidden">
+      <span class="doc-chip" id="info-filename"></span>
+      <span class="doc-chip tag-muted" id="info-version"></span>
+      <span class="doc-chip tag-muted" id="info-pages"></span>
+    </div>
+
+    <div class="toolbar-controls hidden" id="nav-controls">
+      <div class="control-group">
+        <button type="button" class="btn-icon" id="btn-prev" title="前ページ" aria-label="前ページ">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 3L4 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span id="page-indicator" class="mono-pill">— / —</span>
+        <button type="button" class="btn-icon" id="btn-next" title="次ページ" aria-label="次ページ">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M6 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="control-group">
+        <button type="button" class="btn-icon" id="btn-zoom-out" title="縮小" aria-label="縮小">−</button>
+        <span id="zoom-label" class="mono-pill">100%</span>
+        <button type="button" class="btn-icon" id="btn-zoom-in" title="拡大" aria-label="拡大">+</button>
+        <button type="button" class="btn-ghost" id="btn-zoom-fit" title="幅に合わせる">Fit</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="welcome-screen" id="welcome-screen">
+    <div class="welcome-split">
+      <div class="welcome-left">
+        <h1 class="welcome-title">PDF Explorer</h1>
+        <p class="welcome-desc">
+          PDF からテキスト・画像・フォントなどの情報を抽出・確認できます。<br>
+          ファイルを開いて、ページごとの内容をすぐに調べられます。
+        </p>
+
+        <div id="drop-zone-welcome" class="drop-zone-welcome" tabindex="0" role="button" aria-label="PDF ファイルを選択">
+          <svg class="drop-zone-welcome-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="drop-zone-welcome-label">PDF を開く</span>
+          <span class="drop-zone-welcome-hint">クリックまたはドラッグ＆ドロップ</span>
+        </div>
+
+        <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
+      </div>
+
+      <div class="welcome-demo" aria-hidden="true">
+        <div class="demo-shell">
+          <div class="demo-titlebar">
+            <span class="demo-chip demo-chip-file">sample.pdf</span>
+            <span class="demo-chip">PDF 1.7</span>
+            <span class="demo-chip">3 ページ</span>
+            <span class="demo-titlebar-spacer"></span>
+            <span class="demo-chip demo-chip-page">1 / 3</span>
+          </div>
+
+          <div class="demo-workspace">
+            <aside class="demo-pane demo-sidebar">
+              <div class="demo-pane-head"><span>Pages</span></div>
+              <ul class="demo-pages">
+                <li class="demo-page demo-page-1">1</li>
+                <li class="demo-page demo-page-2">2</li>
+                <li class="demo-page demo-page-3">3</li>
+              </ul>
+            </aside>
+
+            <section class="demo-pane demo-viewer">
+              <div class="demo-pane-head"><span>Viewer</span></div>
+              <div class="demo-canvas-stage">
+                <div class="demo-doc demo-doc-1">
+                  <div class="demo-doc-title"></div>
+                  <div class="demo-doc-line w90"></div>
+                  <div class="demo-doc-line w75"></div>
+                  <div class="demo-doc-line w85"></div>
+                  <div class="demo-doc-img"></div>
+                  <div class="demo-doc-line w60"></div>
+                </div>
+                <div class="demo-doc demo-doc-2">
+                  <div class="demo-doc-title short"></div>
+                  <div class="demo-doc-line w70"></div>
+                  <div class="demo-doc-line w80"></div>
+                  <div class="demo-doc-line w55"></div>
+                </div>
+                <div class="demo-doc demo-doc-3">
+                  <div class="demo-doc-title"></div>
+                  <div class="demo-doc-line w65"></div>
+                  <div class="demo-doc-img wide"></div>
+                  <div class="demo-doc-line w90"></div>
+                </div>
+              </div>
+            </section>
+
+            <aside class="demo-pane demo-inspector">
+              <div class="demo-pane-head"><span>Inspector</span></div>
+              <div class="demo-tabs">
+                <span class="demo-tab demo-tab-text">Text</span>
+                <span class="demo-tab demo-tab-ops">Ops</span>
+                <span class="demo-tab demo-tab-fonts">Fonts</span>
+                <span class="demo-tab demo-tab-images">Images</span>
+              </div>
+              <div class="demo-panel demo-panel-text">
+                <div class="demo-row"><span class="demo-k">str</span><span class="demo-v">見積書</span></div>
+                <div class="demo-row"><span class="demo-k">font</span><span class="demo-v">GothicMB101-Bold</span></div>
+                <div class="demo-row"><span class="demo-k">str</span><span class="demo-v">2024年度</span></div>
+                <div class="demo-row dim"><span class="demo-k">str</span><span class="demo-v">…</span></div>
+              </div>
+              <div class="demo-panel demo-panel-ops">
+                <div class="demo-row"><span class="demo-k op">BT</span><span class="demo-v">begin text</span></div>
+                <div class="demo-row"><span class="demo-k op">Tf</span><span class="demo-v">/F1 12</span></div>
+                <div class="demo-row"><span class="demo-k op">Tj</span><span class="demo-v">(見積書)</span></div>
+                <div class="demo-row"><span class="demo-k op">ET</span><span class="demo-v">end text</span></div>
+              </div>
+              <div class="demo-panel demo-panel-fonts">
+                <div class="demo-row"><span class="demo-k">F1</span><span class="demo-v">Type0 · Identity-H</span></div>
+                <div class="demo-row"><span class="demo-k">F2</span><span class="demo-v">TrueType · WinAnsi</span></div>
+                <div class="demo-row dim"><span class="demo-k">CMap</span><span class="demo-v">—</span></div>
+              </div>
+              <div class="demo-panel demo-panel-images">
+                <div class="demo-row"><span class="demo-k">Im1</span><span class="demo-v">JPEG · 842×595</span></div>
+                <div class="demo-row"><span class="demo-k">Im2</span><span class="demo-v">SMask · 842×595</span></div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="workspace hidden" id="workspace">
+    <aside class="pane pane-pages app-sidebar">
+      <div class="pane-header">
+        <h2>Pages</h2>
+        <span class="pane-meta">getPage()</span>
+      </div>
+      <ul id="page-list" class="page-list"></ul>
+    </aside>
+
+    <section class="pane pane-viewer app-canvas-pane">
+      <div class="pane-header pane-header-canvas">
+        <h2>Viewer</h2>
+        <span class="pane-meta">page.render()</span>
+      </div>
+      <div class="viewer-stage">
+        <div class="viewer-window">
+          <div class="viewer-wrap" id="viewer-wrap">
+            <canvas id="pdf-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="pane pane-inspector app-inspector">
+      <div class="inspector-header">
+        <h2 class="inspector-title">Inspector</h2>
+      </div>
+      <nav class="tab-bar" role="tablist" aria-label="Inspector">
+        <button class="tab active" data-tab="text" role="tab">Text</button>
+        <button class="tab" data-tab="operators" role="tab">Ops</button>
+        <button class="tab" data-tab="fonts" role="tab">Fonts</button>
+        <button class="tab" data-tab="images" role="tab">Images</button>
+        <button class="tab" data-tab="vector" role="tab">Vector</button>
+        <button class="tab" data-tab="structure" role="tab">Struct</button>
+        <button class="tab" data-tab="export" role="tab">Export</button>
+      </nav>
+      <div id="inspector-loading" class="inspector-loading hidden" role="status" aria-live="polite"></div>
+      <div id="tab-text" class="tab-panel active" role="tabpanel"></div>
+      <div id="tab-operators" class="tab-panel" role="tabpanel"></div>
+      <div id="tab-fonts" class="tab-panel" role="tabpanel"></div>
+      <div id="tab-images" class="tab-panel" role="tabpanel"></div>
+      <div id="tab-vector" class="tab-panel" role="tabpanel"></div>
+      <div id="tab-structure" class="tab-panel" role="tabpanel"></div>
+      <div id="tab-export" class="tab-panel" role="tabpanel"></div>
+    </aside>
+  </main>
+
+  <footer class="app-footer app-statusbar hidden" id="app-footer">
+    <span class="footer-left">PDF.js 3.11</span>
+    <span class="status-wrap">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="status-bar">PDF ファイルを読み込んでください</span>
+    </span>
+  </footer>
+
+  <script src="shared/minimal-ui.js"></script>
+  <script src="lib/pdf.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
